@@ -1,5 +1,5 @@
 const express = require('express');
-const port = process.env.PORT || 310;
+const port = process.env.PORT || 3000;
 const app = express();
 const cors = require('cors');
 const axios = require('axios');
@@ -17,30 +17,29 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-//https://brapi.dev/api/quote/PETR4%2CMGLU3?range=max&interval=1d&fundamental=true
 
-// axios.get('https://brapi.dev/api/available').then(resp => {
-//     let url = 'https://brapi.dev/api/quote/'
-//     resp.data.stocks.map(quote => {
-//         url += `${quote}%2C`
-//     })
-// url = url.slice(0, -3)
-// url += '?range=max&interval=1d&fundamental=true'
-// res.status(200)
-// res.send(url);
-// });
-
-app.get('/', (req, res) => {
-    axios.get('https://brapi.dev/api/available').then(resp => {        
-        const historicalQuotes = [] 
-        resp.data.stocks.map((stock) => {
-            axios.get(`https://brapi.dev/api/quote/${stock}?range=max&interval=1d&fundamental=true`).then(resp => {
-                historicalQuotes.push(resp.data);                
-            })
-        })        
-        res.status(200)
-        res.send(historicalQuotes);        
-    });    
+app.get('/getAllReq', (req, res) => {
+    const DIVIDE = 15
+    axios.get('https://brapi.dev/api/available').then(resp => {
+        const finalRes = []
+        const availableStocks = resp.data.stocks
+        const qtdStocks = availableStocks.length
+        const qtdReq = Math.ceil(qtdStocks / DIVIDE)
+        for (let i = 0; i < DIVIDE; i++) {
+            let urlReq = 'https://brapi.dev/api/quote/'
+            for (let j = qtdReq * i; j < qtdReq * (i + 1); j++) {
+                if (j > qtdStocks || availableStocks[j] == null)
+                    break
+                else
+                    urlReq += `${availableStocks[j]}%2C`
+            }
+            urlReq = urlReq.slice(0, -3)
+            urlReq += '?range=max&interval=1d&fundamental=true'
+            finalRes.push(urlReq)
+        }
+        res.status(200);
+        res.send(finalRes)
+    })
 })
 
 app.use((req, res) => {
