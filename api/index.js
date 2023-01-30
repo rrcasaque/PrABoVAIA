@@ -17,11 +17,16 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+//função para construir as requisições
+//parametros:
+// - url de aquisição dos ativos
+// - quantidade de divisões 
+// - intervalo de obtenção de histórico
 
-app.get('/getAllReq', (req, res) => {
-    const DIVIDE = 15
-    axios.get('https://brapi.dev/api/available').then(resp => {
-        const finalRes = []
+const getURL = async (url, divide,range) => {
+    const DIVIDE = divide
+    const finalRes = []
+    await axios.get(url).then(resp => {
         const availableStocks = resp.data.stocks
         const qtdStocks = availableStocks.length
         const qtdReq = Math.ceil(qtdStocks / DIVIDE)
@@ -34,12 +39,82 @@ app.get('/getAllReq', (req, res) => {
                     urlReq += `${availableStocks[j]}%2C`
             }
             urlReq = urlReq.slice(0, -3)
-            urlReq += '?range=max&interval=1d&fundamental=true'
+            urlReq += `?range=${range}&interval=1d&fundamental=true`
             finalRes.push(urlReq)
         }
-        res.status(200);
-        res.send(finalRes)
     })
+    return finalRes
+}
+
+// função para realizar todas as requisições 
+
+const getHistoricalStocks = async (URLs, finalArray) => {
+    await axios.get(URLs[0]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[1]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[2]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[3]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[4]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[5]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[6]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[7]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[8]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[9]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[10]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[11]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[12]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[13]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    await axios.get(URLs[14]).then(resp => {
+        finalArray.push(resp.data.results)
+    })
+    return finalArray
+}
+
+app.get('/', async (req, res) => {    
+    const aa = req.query.aa
+    res.send(`resposta obtida: ${aa}`)
+})
+
+app.get('/getURL', async (req, res) => {    
+    const resposta = await getURL('https://brapi.dev/api/available', 15)
+    res.send(resposta)
+})
+
+//localhost:3000/getHistory?range='max'
+
+app.get('/getHistory', async (req, res) => {    
+    let range = 'max'
+    if(req.query.range!=undefined) range = req.query.range
+    const resposta = await getURL('https://brapi.dev/api/available', 15,range)     
+    const finalArray = await getHistoricalStocks(resposta,[])
+    res.send(finalArray)
 })
 
 app.use((req, res) => {
