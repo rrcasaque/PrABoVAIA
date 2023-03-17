@@ -23,7 +23,7 @@ app.use(cors(corsOptions));
 // - quantidade de divisões 
 // - intervalo de obtenção de histórico
 
-const getURL = async (url, divide,range) => {
+const getURL = async (url, divide, range) => {
     const DIVIDE = divide
     const finalRes = []
     await axios.get(url).then(resp => {
@@ -97,24 +97,30 @@ const getHistoricalStocks = async (URLs, finalArray) => {
     return finalArray
 }
 
-app.get('/', async (req, res) => {    
+app.get('/', async (req, res) => {
     const aa = req.query.aa
     res.send(`resposta obtida: ${aa}`)
 })
 
-app.get('/getURL', async (req, res) => {    
+app.get('/getURL', async (req, res) => {
     const resposta = await getURL('https://brapi.dev/api/available', 15)
     res.send(resposta)
 })
 
 //localhost:3000/getHistory?range='max'
 
-app.get('/getHistory', async (req, res) => {    
+app.get('/getHistory', async (req, res) => {
     let range = 'max'
-    if(req.query.range!=undefined) range = req.query.range
-    const resposta = await getURL('https://brapi.dev/api/available', 15,range)     
-    const finalArray = await getHistoricalStocks(resposta,[])
+    if (req.query.range != undefined) range = req.query.range
+    const resposta = await getURL('https://brapi.dev/api/available', 15, range)
+    const finalArray = await getHistoricalStocks(resposta, [])
     res.send(finalArray)
+})
+
+app.get('/getHistoryUnique', async (req, res) => {
+    await axios.get(`https://brapi.dev/api/quote/${req.query.stock}?range=${req.query.range}&interval=1d&fundamental=true`).then(resp => {
+        res.send(resp.data.results)
+    })
 })
 
 app.use((req, res) => {
